@@ -57,9 +57,37 @@ void listarFilmes() {
 
 // Função para cadastrar um novo filme (COUTINHO)
 void cadastrarFilme() {
-    // TODO: Implementar o cadastro de um novo filme    
-    printf("\n===== CADASTRO DE FILME =====\n");
+        if (total_filmes >= FILMES) {
+        printf("\nLimite de filmes atingido!\n");
+        return;   
+    }
 
+    filmes[total_filmes].id = total_filmes + 1;
+    
+    printf("\n===== CADASTRO DE FILME =====\n");
+    printf("ID: %d\n", filmes[total_filmes].id);
+    printf("Digite os dados do filme:\n");
+    printf("Titulo: ");
+    fflush(stdin);
+    fgets(filmes[total_filmes].titulo, NOME, stdin);
+    filmes[total_filmes].titulo[strcspn(filmes[total_filmes].titulo, "\n")] = '\0';
+
+    printf("Genero: ");
+    fflush(stdin);
+    fgets(filmes[total_filmes].genero, NOME, stdin);
+    filmes[total_filmes].genero[strcspn(filmes[total_filmes].genero, "\n")] = '\0';
+
+    printf("Duracao (minutos): ");
+    scanf("%d", &filmes[total_filmes].duracao);
+    total_filmes++;
+    printf("\nDeseja cadastrar outro filme? (S/N): ");
+    char resposta;
+    fflush(stdin);
+    scanf("%c", &resposta);
+    if (resposta == 'S' || resposta == 's') {
+        cadastrarFilme();
+    }
+    printf("\nFilme cadastrado com sucesso!\n");
 }
 
 // Função para cadastrar uma nova sessão (PEJOTA)
