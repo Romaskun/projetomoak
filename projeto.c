@@ -57,38 +57,40 @@ void listarFilmes() {
 
 // Função para cadastrar um novo filme (COUTINHO)
 void cadastrarFilme() {
-        if (total_filmes >= FILMES) {
-        printf("\nLimite de filmes atingido!\n");
-        return;   
-    }
-
-    filmes[total_filmes].id = total_filmes + 1;
-    
+    if (total_filmes >= FILMES) {
+    	printf("Limite de Filmes Atingido");
+    	return;
+	}    
+	
+	filmes[total_filmes].id = total_filmes + 1;
+	
     printf("\n===== CADASTRO DE FILME =====\n");
     printf("ID: %d\n", filmes[total_filmes].id);
     printf("Digite os dados do filme:\n");
+
     printf("Titulo: ");
     fflush(stdin);
-    fgets(filmes[total_filmes].titulo, NOME, stdin);
-    filmes[total_filmes].titulo[strcspn(filmes[total_filmes].titulo, "\n")] = '\0';
+    scanf(" %[^\n]", filmes[total_filmes].titulo);
 
     printf("Genero: ");
     fflush(stdin);
-    fgets(filmes[total_filmes].genero, NOME, stdin);
-    filmes[total_filmes].genero[strcspn(filmes[total_filmes].genero, "\n")] = '\0';
+    scanf(" %[^\n]", filmes[total_filmes].genero);
 
     printf("Duracao (minutos): ");
     scanf("%d", &filmes[total_filmes].duracao);
     total_filmes++;
+
+    printf("\nFilme cadastrado com sucesso!\n");
+    
     printf("\nDeseja cadastrar outro filme? (S/N): ");
-    char resposta;
+	char resposta;
     fflush(stdin);
     scanf("%c", &resposta);
     if (resposta == 'S' || resposta == 's') {
         cadastrarFilme();
     }
-    printf("\nFilme cadastrado com sucesso!\n");
 }
+
 
 // Função para cadastrar uma nova sessão (PEJOTA)
 void cadastrarSessao() {
