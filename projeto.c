@@ -21,8 +21,8 @@ typedef struct {
 typedef struct {
     int id;
     int id_filme;
-    char data[11]; // formato DD/MM/AAAA
-    char horario[6]; // formato HH:MM
+    char data[11]; 
+    char horario[6]; 
     char sala[10];
     float preco;
     int assentos_totais;
@@ -37,7 +37,7 @@ typedef struct {
     int id_filme;
     int numero_assento;
     float valor;
-    char data_venda[11]; // formato DD/MM/AAAA
+    char data_venda[11];
 } Ingresso;
 
 // Variáveis globais para armazenar os dados
@@ -50,42 +50,79 @@ int total_ingressos = 0;
 
 // Função para listar todos os filmes (KAIO)
 void listarFilmes() {
-    // TODO: Implementar a listagem de todos os filmes cadastrados
-    printf("\n===== LISTA DE FILMES =====\n\n");
-
+    // O que fazer: Implementar a listagem de todos os filmes cadastrados
+    if (total_filmes == 0) {
+        printf("Nenhum filme cadastrado.\n");
+    } else {
+       printf("\n===== LISTA DE FILMES =====\n\n");
+       for (int i = 0; i < total_filmes; i++) {
+        printf("%d. %s (%s, %d min)\n", filmes[i].id, filmes[i].titulo, filmes[i].genero, filmes[i].duracao);
+    }   
+         printf("\nTotal de filmes cadastrados: %d\n", total_filmes);
+    }
 }
-
+        
 // Função para cadastrar um novo filme (COUTINHO)
 void cadastrarFilme() {
-    // TODO: Implementar o cadastro de um novo filme    
+    if (total_filmes >= FILMES) {
+    	printf("Limite de Filmes Atingido");
+    	return;
+	}    
+	
+	filmes[total_filmes].id = total_filmes + 1;
+	
     printf("\n===== CADASTRO DE FILME =====\n");
+    printf("ID: %d\n", filmes[total_filmes].id);
+    printf("Digite os dados do filme:\n");
 
+    printf("Titulo: ");
+    fflush(stdin);
+    scanf(" %[^\n]", filmes[total_filmes].titulo);
+
+    printf("Genero: ");
+    fflush(stdin);
+    scanf(" %[^\n]", filmes[total_filmes].genero);
+
+    printf("Duracao (minutos): ");
+    scanf("%d", &filmes[total_filmes].duracao);
+    total_filmes++;
+
+    printf("\nFilme cadastrado com sucesso!\n");
+    
+    printf("\nDeseja cadastrar outro filme? (S/N): ");
+	char resposta;
+    fflush(stdin);
+    scanf("%c", &resposta);
+    if (resposta == 'S' || resposta == 's') {
+        cadastrarFilme();
+    }
 }
+
 
 // Função para cadastrar uma nova sessão (PEJOTA)
 void cadastrarSessao() {
-    // TODO: Implementar o cadastro de uma nova sessão
+    // O que fazer: Implementar o cadastro de uma nova sessão
     printf("\n===== CADASTRO DE SESSAO =====\n");
 
 }
 
 // Função para buscar sessões de um filme (RAFAEL)
 void buscarSessoesFilme() {
-    // TODO: Implementar a busca de sessões de um filme específico
+    // O que fazer: Implementar a busca de sessões de um filme específico
     printf("\n===== BUSCAR SESSOES DE UM FILME =====\n");
 
 }
 
 // Função para exibir o mapa de assentos de uma sessão
 void exibirMapaAssentos(int id_sessao) {
-    // TODO: Implementar a exibição do mapa de assentos de uma sessão
+    // O que fazer: Implementar a exibição do mapa de assentos de uma sessão
     printf("\n===== MAPA DE ASSENTOS =====\n\n");
     
 }
 
 // Função para vender ingressos (DIEGO)
 void venderIngresso() {
-    // TODO: Implementar a venda de ingressos    
+    // O que fazer: Implementar a venda de ingressos    
     printf("\n===== VENDA DE INGRESSOS =====\n");
     
 
@@ -93,7 +130,7 @@ void venderIngresso() {
 
 // Função para gerar relatório de vendas (ROMEU)
 void relatorioVendas() {
-    // TODO: Implementar o relatório de vendas    
+    // O que fazer: Implementar o relatório de vendas    
     printf("\n===== RELATORIO DE VENDAS =====\n\n");
 }
 
