@@ -51,10 +51,17 @@ int total_ingressos = 0;
 // Função para listar todos os filmes (KAIO)
 void listarFilmes() {
     // O que fazer: Implementar a listagem de todos os filmes cadastrados
-    printf("\n===== LISTA DE FILMES =====\n\n");
-
+    if (total_filmes == 0) {
+        printf("Nenhum filme cadastrado.\n");
+    } else {
+       printf("\n===== LISTA DE FILMES =====\n\n");
+       for (int i = 0; i < total_filmes; i++) {
+        printf("%d. %s (%s, %d min)\n", filmes[i].id, filmes[i].titulo, filmes[i].genero, filmes[i].duracao);
+    }   
+         printf("\nTotal de filmes cadastrados: %d\n", total_filmes);
+    }
 }
-
+        
 // Função para cadastrar um novo filme (COUTINHO)
 void cadastrarFilme() {
     if (total_filmes >= FILMES) {
