@@ -101,10 +101,51 @@ void cadastrarFilme() {
 
 // Função para cadastrar uma nova sessão (PEJOTA)
 void cadastrarSessao() {
-    // O que fazer: Implementar o cadastro de uma nova sessão
+    if(total_sessoes >= SESSOES) {
+    	printf("LIMITE DE SESSOES ATINGIDO!!");
+    	return;
+	}
     printf("\n===== CADASTRO DE SESSAO =====\n");
-
+    
+    if(total_filmes == 0) {
+    	printf("Nenhum filme em Cartaz neste momento. Cadastre um filme para inicar uma sessão de cinema");
+    	return;
+	}
+	
+	printf("\n---------FILMES EM CARTAZ-----------\n");
+	for(int i = 0; i < total_filmes; i++) {
+		printf("ID: %d |\n TITULO: %s |\n",filmes[i].id, filmes[i].titulo);
+	}
+	
+	sessoes[total_sessoes].id = total_sessoes + 1;
+	printf("\nID SESSÃO: %d\n", sessoes[total_sessoes].id);
+	
+	printf("Informe o ID do filme para a sessão: ");
+	scanf("%d", &sessoes[total_sessoes].id_filme);
+	
+	printf("Data da sessão (DD/MM/AAAA): ");
+	scanf(" %10[^\n]", sessoes[total_sessoes].data);
+	
+	printf("Horário da sessão (HH:MM): ");
+	scanf(" %5[^\n]", sessoes[total_sessoes].horario);
+	
+	printf("Sala: ");
+	scanf(" %9[^\n]", sessoes[total_sessoes].sala);
+	
+	printf("Preço do ingresso: ");
+	scanf("%f", &sessoes[total_sessoes].preco);
+	
+	sessoes[total_sessoes].assentos_totais = ASSENTOS;
+	sessoes[total_sessoes].assentos_disponiveis = ASSENTOS;
+	
+	for (int i = 0; i < ASSENTOS; i++) {
+		sessoes[total_sessoes].assentos[i] = 0;
+	}
+	total_sessoes++;
+	printf("\nSessão cadastrada com sucesso!!\n");
 }
+
+
 
 // Função para buscar sessões de um filme (RAFAEL)
 void buscarSessoesFilme() {
