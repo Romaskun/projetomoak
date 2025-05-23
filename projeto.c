@@ -146,20 +146,93 @@ void cadastrarSessao() {
 }
 
 
-
-// Função para buscar sessões de um filme (RAFAEL)
+    // Função para buscar sessões de um filme (RAFAEL)
 void buscarSessoesFilme() {
-    // O que fazer: Implementar a busca de sessões de um filme específico
+   
     printf("\n===== BUSCAR SESSOES DE UM FILME =====\n");
+    
+       if (total_filmes == 0) {
+        printf("Nenhum filme cadastrado.\n");
+        return;
+    }
+
+    char titulo_busca[NOME];
+    int encontrado = 0;
+
+    printf("Digite o título do filme: ");
+    fflush(stdin);
+    scanf(" %[^\n]", titulo_busca);
+
+    // Procurar filme pelo título
+    for (int i = 0; i < total_filmes; i++) {
+        if (strcmp(filmes[i].titulo, titulo_busca) == 0) {
+            int id_filme = filmes[i].id;
+            encontrado = 1;
+            printf("\nSessões do filme \"%s\":\n", filmes[i].titulo);
+
+            int encontrou_sessao = 0;
+            for (int j = 0; j < total_sessoes; j++) {
+                if (sessoes[j].id_filme == id_filme) {
+                    printf("ID Sessão: %d\n", sessoes[j].id);
+                    printf("Data: %s\n", sessoes[j].data);
+                    printf("Horário: %s\n", sessoes[j].horario);
+                    printf("Sala: %s\n", sessoes[j].sala);
+                    printf("Preço: R$ %.2f\n", sessoes[j].preco);
+                    printf("Assentos Disponíveis: %d\n", sessoes[j].assentos_disponiveis);
+                    printf("--------------------------\n");
+                    encontrou_sessao = 1;
+                }
+            }
+
+            if (!encontrou_sessao) {
+                printf("Nenhuma sessão encontrada para este filme.\n");
+            }
+
+            break;
+        }
+    }
+
+    if (!encontrado) {
+        printf("Filme não encontrado.\n");
+    }
+}
 
 }
 
 // Função para exibir o mapa de assentos de uma sessão
 void exibirMapaAssentos(int id_sessao) {
-    // O que fazer: Implementar a exibição do mapa de assentos de uma sessão
+    // TODO: Implementar a exibição do mapa de assentos de uma sessão
     printf("\n===== MAPA DE ASSENTOS =====\n\n");
     
+     // Verifica se a sessão existe
+    int encontrada = 0;
+    for (int i = 0; i < total_sessoes; i++) {
+        if (sessoes[i].id == id_sessao) {
+            encontrada = 1;
+            printf("Sessão ID: %d | Sala: %s | Horário: %s | Data: %s\n", 
+                    sessoes[i].id, sessoes[i].sala, sessoes[i].horario, sessoes[i].data);
+            printf("Assentos (0 = Livre | 1 = Ocupado):\n\n");
+
+            // Exibe os assentos como uma lista numerada
+            for (int j = 0; j < sessoes[i].assentos_totais; j++) {
+                printf("%02d[%d]  ", j + 1, sessoes[i].assentos[j]);
+
+                // Quebra de linha a cada 10 assentos para melhor visualização
+                if ((j + 1) % 10 == 0) {
+                    printf("\n");
+                }
+            }
+
+            printf("\n\nLegenda: [0] Livre  [1] Ocupado\n");
+            break;
+        }
+    }
+
+    if (!encontrada) {
+        printf("Sessão com ID %d não encontrada.\n", id_sessao);
+    }
 }
+ 
 
 // Função para vender ingressos (DIEGO)
 void venderIngresso() {
