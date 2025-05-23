@@ -163,10 +163,90 @@ void exibirMapaAssentos(int id_sessao) {
 
 // Função para vender ingressos (DIEGO)
 void venderIngresso() {
-    // O que fazer: Implementar a venda de ingressos    
-    printf("\n===== VENDA DE INGRESSOS =====\n");
-    
+	if (total_sessoes == 0) {
+		printf("\nSem sessões cadastradas...\n");
+		return;
+	}
+	
+	if (total_ingressis >= INGRESSOS) {
+		printf("\nLimite máximo de inregssos atingido.\n");
+		return;
+	}
+	
+	int id_sessao, numero_assento;
+	printf("\n===== VENDA DE INGRESSOS =====\n");
 
+    printf("\nSessões Disponíveis:\n");
+    for (int i = 0; i < total_sessoes; i++) {
+        printf("ID: %d | Filme ID: %d | Data: %s | Horário: %s | Sala: %s | Preço: R$%.2f | Assentos Disponíveis: %d\n",
+               sessoes[i].id, sessoes[i].id_filme, sessoes[i].data, sessoes[i].horario,
+               sessoes[i].sala, sessoes[i].preco, sessoes[i].assentos_disponiveis);
+   }
+   
+   printf("\nDigite o ID da sessão desejada: ");
+   scanf("%d", &id_sessao);
+   
+   int index_sessao = -1;
+   for (int i = 0; i < total_sessoes; i++) {
+   	if (sessoes[i].id == id_sessao) {
+   		index_sessao = i;
+   		break;
+		}
+	}
+	
+	if (index_sessao == -1) {
+		printf("\nSessão não encontrada.\n");
+		return;
+	}
+	
+	if (sessoes[index_sessao].assentos_disponiveis == 0) {
+		printf("\nSessão lotada! Não há assentos disponíveis.\n");
+		return;
+	}
+	
+	printf("\nMapa de assentos (0 = livre, 1 = ocupado):\n");
+	for (int i = 0; i < sessoes[index_sessao].assentos_totais; i++) {
+		printf("[%02d:%d] ", i + 1, sessoes[index_sessao].assentos[i]);
+		if ((i + 1) % 5 == 0) 
+		printf("\n");
+	}
+	
+	printf("\n\nInforme o número do assento (1-%d): ", sessoes[index_sessao].assentos_totais);
+	scanf("%d", &numero_assento);
+	
+	if (numero_assento < 1 || numero_assento > sessoes[index_sessao].assentos_totais ||
+	    sessoes[index_sessao].assentos[numero_assento - 1] == 1) {
+	    printf("\nAssento inválido ou ocupado.\n");
+		 return;	
+		 } 
+		 
+	char confirmacao;
+	printf("\nConfirmar compra do assento %d por R$%2.f? (S/N): ",numero_assento, sessoes[index_sessao].preco);
+	scanf(" %c", &confirmacao);
+	
+	if confirmacao != 'S' && confirmacao != 's') {
+		printf("\nCompra cancelada.\n");
+		return;
+	}
+	
+	 ingressos[total_ingressos].id = total_ingressos + 1;
+	 ingressos[total_ingressos].id_sessao = id_sessao;
+	 ingressos[total_ingressos].id_filme = sessoes[index_sessao].id_filme;
+	 ingressos[total_ingressos].numero_assento = numero_assento;
+	 ingressos[total_ingressos].valor = sessoes[index_sessao].preco;
+	 strcpy(ingressos[total_ingressos].data_venda, "20/05/2025");
+	 
+	 sessoes[index_sessao].assentos[numero_assento - 1] = 1;
+	 sessoes[index_sessao].assentos_disponiveis--;
+	 total_ingressos++;
+	 
+	 printf("\nIngresso vendido com sucesso!\n");
+	 printf("Sessão: %s | Horário: %s | Assento: %d | Valor: R$%.2f | Data: %s\n",
+	        sessoes[index_sessao].data,
+           sessoes[index_sessao].horario,
+           numero_assento,
+           sessoes[index_sessao].preco,
+           ingressos[total_ingressos - 1].data_venda);    
 }
 
 // Função para gerar relatório de vendas (ROMEU)
