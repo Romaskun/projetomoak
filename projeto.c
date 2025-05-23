@@ -241,7 +241,7 @@ void venderIngresso() {
 		return;
 	}
 	
-	if (total_ingressis >= INGRESSOS) {
+	if (total_ingressos >= INGRESSOS) {
 		printf("\nLimite máximo de inregssos atingido.\n");
 		return;
 	}
@@ -297,7 +297,7 @@ void venderIngresso() {
 	printf("\nConfirmar compra do assento %d por R$%2.f? (S/N): ",numero_assento, sessoes[index_sessao].preco);
 	scanf(" %c", &confirmacao);
 	
-	if confirmacao != 'S' && confirmacao != 's') {
+	if (confirmacao != 'S' && confirmacao != 's') {
 		printf("\nCompra cancelada.\n");
 		return;
 	}
@@ -321,6 +321,7 @@ void venderIngresso() {
            sessoes[index_sessao].preco,
            ingressos[total_ingressos - 1].data_venda);    
 }
+
 
 // Função para gerar relatório de vendas (ROMEU)
 void relatorioVendas() {
