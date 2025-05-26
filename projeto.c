@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 // Definição de tamanhos máximos
 #define NOME 50
@@ -197,8 +198,6 @@ void buscarSessoesFilme() {
     }
 }
 
-}
-
 // Função para exibir o mapa de assentos de uma sessão
 void exibirMapaAssentos(int id_sessao) {
     // TODO: Implementar a exibição do mapa de assentos de uma sessão
@@ -331,6 +330,7 @@ void relatorioVendas() {
 
 // Função principal
 int main() {
+	setlocale(LC_ALL, "Portuguese");
     int opcao;
     
     do {
