@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 // Definição de tamanhos máximos
 #define NOME 50
@@ -195,8 +196,6 @@ void buscarSessoesFilme() {
     if (!encontrado) {
         printf("Filme não encontrado.\n");
     }
-}
-
 }
 
 // Função para exibir o mapa de assentos de uma sessão
@@ -433,12 +432,12 @@ int main() {
     
     do {
         printf("\n===== SISTEMA DE CINEMA =====\n");
-        printf("1. Listar todos os filmes (KAIO)\n");
-        printf("2. Cadastrar filme (COUTINHO)\n");
-        printf("3. Cadastrar sessao (PEJOTA)\n");
-        printf("4. Buscar sessoes de um filme (RAFAEL)\n");
-        printf("5. Vender ingressos (DIEGO)\n");
-        printf("6. Relatorio de vendas (ROMEU)\n");
+        printf("1. Listar todos os filmes \n");
+        printf("2. Cadastrar filme \n");
+        printf("3. Cadastrar sessao \n");
+        printf("4. Buscar sessoes de um filme \n");
+        printf("5. Vender ingressos )\n");
+        printf("6. Relatorio de vendas\n");
         printf("7. Remover filme\n");
         printf("8. Remover sessão\n");
         printf("9. Buscar filme por gênero\n");
