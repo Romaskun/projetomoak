@@ -51,17 +51,34 @@ int total_ingressos = 0;
 
 // Função para listar todos os filmes (KAIO)
 void listarFilmes() {
-    // O que fazer: Implementar a listagem de todos os filmes cadastrados
     if (total_filmes == 0) {
         printf("Nenhum filme cadastrado.\n");
     } else {
        printf("\n===== LISTA DE FILMES =====\n\n");
        for (int i = 0; i < total_filmes; i++) {
-        printf("%d. %s (%s, %d min)\n", filmes[i].id, filmes[i].titulo, filmes[i].genero, filmes[i].duracao);
-    }   
+       		printf("ID Filme: %d\n", filmes[i].id);
+       		printf("Titulo do Filme: %s\n", filmes[i].titulo);
+       		printf("Genero do Filme: %s\n", filmes[i].genero);
+       		printf("Duração do Filme: %d (Minutos)\n", filmes[i].duracao);
+       		printf("\n===================SESSÕES======================\n");
+       		
+       	int encontrou = 0;
+       	for(int s = 0; s < total_sessoes; s++) {
+       		if(sessoes[s].id_filme == filmes[i].id) {
+       		printf("ID Sessão: %d\n", sessoes[s].id);
+       		printf("Data: %s\n", sessoes[s].data);
+       		printf("Horário : %s\n", sessoes[s].horario);
+       		printf("Sala: %s\n", sessoes[s].sala);
+       		printf("\n-----------------------------------\n");
+       		encontrou = 1;
+			}
+		} 
+		if (!encontrou) {
+                printf("Nenhuma sessão cadastrada para este filme.\n");
+            }
+    	}   
          printf("\nTotal de filmes cadastrados: %d\n", total_filmes);
     }
-}
         
 // Função para cadastrar um novo filme (COUTINHO)
 void cadastrarFilme() {
