@@ -65,35 +65,87 @@ int total_ingressos = 0;
 
 //COMPLETA
 void listarFilmes() {
-    if (total_filmes == 0) {
-        printf("Nenhum filme cadastrado.\n");
-    } else {
-       printf(RED "\n===== LISTA DE FILMES =====\n\n" RESET);
-       for (int i = 0; i < total_filmes; i++) {
-       		printf("ID Filme: %d\n", filmes[i].id);
-       		printf("Titulo do Filme: %s\n", filmes[i].titulo);
-       		printf("Genero do Filme: %s\n", filmes[i].genero);
-       		printf("Duração do Filme: %d (Minutos)\n", filmes[i].duracao);
-       		printf("\n===================SESSÕES======================\n");
-       		
-       	int encontrou = 0;
-       	for(int s = 0; s < total_sessoes; s++) {
-       		if(sessoes[s].id_filme == filmes[i].id) {
-       		printf("ID Sessão: %d\n", sessoes[s].id);
-       		printf("Data: %s\n", sessoes[s].data);
-       		printf("Horário : %s\n", sessoes[s].horario);
-       		printf("Sala: %s\n", sessoes[s].sala);
-       		printf("\n-----------------------------------\n");
-       		encontrou = 1;
-			}
-		} 
-		if (!encontrou) {
-                printf("Nenhuma sessão cadastrada para este filme.\n");
-            }
-    	}   
-         printf("\nTotal de filmes cadastrados: %d\n", total_filmes);
-   	 }
+    FILE *arquivoFilmes = fopen("filmes.txt", "r");
+    if (arquivoFilmes == NULL) {
+        printf("Erro ao abrir o arquivo de filmes.\n");
+        return;
     }
+
+    FILE *arquivoSessoes = fopen("sessoes.txt", "r");
+    if (arquivoSessoes == NULL) {
+        printf("Erro ao abrir o arquivo de sessões.\n");
+        fclose(arquivoFilmes);
+        return;
+    }
+    
+    Sessao sessao_temp;
+    total_sessoes = 0;
+    while (fscanf(arquivoSessoes, "%d,%d,%10[^,],%5[^,],%9[^,],%f,%d,%d,",
+                  &sessao_temp.id,
+                  &sessao_temp.id_filme,
+                  sessao_temp.data,
+                  sessao_temp.horario,
+                  sessao_temp.sala,
+                  &sessao_temp.preco,
+                  &sessao_temp.assentos_totais,
+                  &sessao_temp.assentos_disponiveis) == 8) {
+
+        
+        fscanf(arquivoSessoes, "%*[^\n]\n"); 
+
+        if (total_sessoes < SESSOES) {
+            sessoes[total_sessoes++] = sessao_temp;
+        }
+    }
+    fclose(arquivoSessoes);
+
+    Filme filme_temp;
+    int count = 0;
+
+    printf(RED "\n===== LISTA DE FILMES =====\n\n" RESET);
+
+    while (fscanf(arquivoFilmes, "%d,%99[^,],%49[^,],%d\n",
+                  &filme_temp.id,
+                  filme_temp.titulo,
+                  filme_temp.genero,
+                  &filme_temp.duracao) == 4) {
+
+        printf("ID Filme: %d\n", filme_temp.id);
+        printf("Titulo do Filme: %s\n", filme_temp.titulo);
+        printf("Genero do Filme: %s\n", filme_temp.genero);
+        printf("Duração do Filme: %d (Minutos)\n", filme_temp.duracao);
+        printf("----------------------------------------\n");
+
+        filmes[count++] = filme_temp;
+
+        
+        int encontrou = 0;
+        printf("\n" YELLOW "----- SESSÕES PARA ESTE FILME -----\n" RESET);
+        for (int s = 0; s < total_sessoes; s++) {
+            if (sessoes[s].id_filme == filme_temp.id) {
+                printf("ID Sessão: %d\n", sessoes[s].id);
+                printf("Data: %s\n", sessoes[s].data);
+                printf("Horário: %s\n", sessoes[s].horario);
+                printf("Sala: %s\n", sessoes[s].sala);
+                printf("Preço: R$ %.2f\n", sessoes[s].preco);
+                printf("Assentos disponíveis: %d\n", sessoes[s].assentos_disponiveis);
+                printf("------------------------------------\n");
+                encontrou = 1;
+            }
+        }
+
+        if (!encontrou) {
+            printf("Nenhuma sessão cadastrada para este filme.\n");
+        }
+
+        printf("\n========================================\n\n");
+    }
+
+    total_filmes = count;
+    fclose(arquivoFilmes);
+
+    printf("\nTotal de filmes cadastrados: %d\n", total_filmes);
+}
 
 //COMPLETA
 void cadastrarFilme() {
@@ -118,6 +170,21 @@ void cadastrarFilme() {
 
     printf("Duracao (minutos): ");
     scanf("%d", &filmes[total_filmes].duracao);
+    
+    FILE *arquivo = fopen("filmes.txt", "a");
+    if (arquivo == NULL) {
+    	printf("Erro ao abrir o arquivo!");
+    	return;
+	}
+	
+	fprintf(arquivo, "%d,%s,%s,%d\n",
+	filmes[total_filmes].id,
+	filmes[total_filmes].titulo,
+	filmes[total_filmes].genero,
+	filmes[total_filmes].duracao);
+    
+    fclose(arquivo);
+    
     total_filmes++;
 
     printf("\nFilme cadastrado com sucesso!\n");
@@ -131,8 +198,30 @@ void cadastrarFilme() {
     }
 }
 
+
+void carregarFilmesDoArquivo() {
+    FILE *arquivo = fopen("filmes.txt", "r");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo de filmes.\n");
+        return;
+    }
+
+    total_filmes = 0;
+    while (fscanf(arquivo, "%d,%99[^,],%49[^,],%d\n",
+                  &filmes[total_filmes].id,
+                  filmes[total_filmes].titulo,
+                  filmes[total_filmes].genero,
+                  &filmes[total_filmes].duracao) == 4) {
+        total_filmes++;
+    }
+    fclose(arquivo);
+}
+
+
 //COMPLETA
 void cadastrarSessao() {
+	carregarFilmesDoArquivo();
+	
     if(total_sessoes >= SESSOES) {
     	printf("LIMITE DE SESSOES ATINGIDO!!");
     	return;
@@ -173,6 +262,28 @@ void cadastrarSessao() {
 	for (int i = 0; i < ASSENTOS; i++) {
 		sessoes[total_sessoes].assentos[i] = 0;
 	}
+	
+	FILE *arquivo = fopen("sessoes.txt", "a");
+	
+	if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para salvar a sessão.\n");
+        return;
+    }
+	
+	
+	fprintf(arquivo, "%d,%d,%s,%s,%s,%.2f,%d,%d,",
+    	sessoes[total_sessoes].id,
+    	sessoes[total_sessoes].id_filme,
+    	sessoes[total_sessoes].data,
+    	sessoes[total_sessoes].horario,
+        sessoes[total_sessoes].sala,
+        sessoes[total_sessoes].preco,
+        sessoes[total_sessoes].assentos_totais,
+        sessoes[total_sessoes].assentos_disponiveis
+    );
+
+    fclose(arquivo);
+    
 	total_sessoes++;
 	printf("\nSessão cadastrada com sucesso!!\n");
 }
@@ -456,7 +567,6 @@ void relatorioVendas() {
 
 //COMPLETA
 int main() {
-    setlocale(LC_ALL, "portuguese");
     setlocale(LC_ALL, "Portuguese");
     int opcao;
     
