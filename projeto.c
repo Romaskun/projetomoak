@@ -217,10 +217,61 @@ void carregarFilmesDoArquivo() {
     fclose(arquivo);
 }
 
+void carregarSessoesDoArquivo() {
+    FILE *arquivo = fopen("sessoes.txt", "r");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo de sessões.\n");
+        return;
+    }
+
+    total_sessoes = 0;
+    while (fscanf(arquivo, "%d,%d,%10[^,],%5[^,],%9[^,],%f,%d,%d,",
+                  &sessoes[total_sessoes].id,
+                  &sessoes[total_sessoes].id_filme,
+                  sessoes[total_sessoes].data,
+                  sessoes[total_sessoes].horario,
+                  sessoes[total_sessoes].sala,
+                  &sessoes[total_sessoes].preco,
+                  &sessoes[total_sessoes].assentos_totais,
+                  &sessoes[total_sessoes].assentos_disponiveis) == 8) {
+
+        for (int i = 0; i < sessoes[total_sessoes].assentos_totais; i++) {
+            fscanf(arquivo, "%d,", &sessoes[total_sessoes].assentos[i]);
+        }
+
+        total_sessoes++;
+    }
+
+    fclose(arquivo);
+}
+
+void carregarIngressosDoArquivo() {
+    FILE *arquivo = fopen("ingressos.txt", "r");
+    if (arquivo == NULL) {
+        printf("Arquivo de ingressos não encontrado. Nenhum ingresso foi carregado.\n");
+        return;
+    }
+
+    total_ingressos = 0;
+
+    while (fscanf(arquivo, "%d,%d,%d,%d,%f,%10[^\n]\n",
+                  &ingressos[total_ingressos].id,
+                  &ingressos[total_ingressos].id_sessao,
+                  &ingressos[total_ingressos].id_filme,
+                  &ingressos[total_ingressos].numero_assento,
+                  &ingressos[total_ingressos].valor,
+                  ingressos[total_ingressos].data_venda) == 6) {
+        total_ingressos++;
+        if (total_ingressos >= INGRESSOS) break; // Evita ultrapassar o limite
+    }
+
+    fclose(arquivo);
+}
 
 //COMPLETA
 void cadastrarSessao() {
 	carregarFilmesDoArquivo();
+	
 	
     if(total_sessoes >= SESSOES) {
     	printf("LIMITE DE SESSOES ATINGIDO!!");
@@ -341,23 +392,30 @@ void buscarSessoesFilme() {
 
 // COMPLETA
 void exibirMapaAssentos(int id_sessao) {
-    // TODO: Implementar a exibição do mapa de assentos de uma sessão
+	carregarSessoesDoArquivo();
+	carregarIngressosDoArquivo();
+	
     printf(CYAN "\n===== MAPA DE ASSENTOS =====\n\n" RESET);
     
-     // Verifica se a sessão existe
     int encontrada = 0;
     for (int i = 0; i < total_sessoes; i++) {
         if (sessoes[i].id == id_sessao) {
             encontrada = 1;
+            
+            for (int a = 0; a < total_ingressos; a++) {
+                if (ingressos[a].id_sessao == sessoes[i].id) {
+                    sessoes[i].assentos[ingressos[a].numero_assento - 1] = 1;
+                }
+            }
+            
             printf("Sessão ID: %d | Sala: %s | Horário: %s | Data: %s\n", 
                     sessoes[i].id, sessoes[i].sala, sessoes[i].horario, sessoes[i].data);
             printf("Assentos (0 = Livre | 1 = Ocupado):\n\n");
 
-            // Exibe os assentos como uma lista numerada
+            
             for (int j = 0; j < sessoes[i].assentos_totais; j++) {
                 printf("%02d[%d]  ", j + 1, sessoes[i].assentos[j]);
 
-                // Quebra de linha a cada 10 assentos para melhor visualização
                 if ((j + 1) % 10 == 0) {
                     printf("\n");
                 }
@@ -376,6 +434,8 @@ void exibirMapaAssentos(int id_sessao) {
 
 //COMPLETA
 void venderIngresso() {
+	carregarSessoesDoArquivo();
+	
 	if (total_sessoes == 0) {
 		printf("\nSem sessões cadastradas...\n");
 		return;
@@ -394,7 +454,7 @@ void venderIngresso() {
         printf("ID: %d | Filme ID: %d | Data: %s | Horário: %s | Sala: %s | Preço: R$%.2f | Assentos Disponíveis: %d\n",
                sessoes[i].id, sessoes[i].id_filme, sessoes[i].data, sessoes[i].horario,
                sessoes[i].sala, sessoes[i].preco, sessoes[i].assentos_disponiveis);
-   }
+    }    
    
    printf("\nDigite o ID da sessão desejada: ");
    scanf("%d", &id_sessao);
@@ -415,6 +475,14 @@ void venderIngresso() {
 	if (sessoes[index_sessao].assentos_disponiveis == 0) {
 		printf("\nSessão lotada! Não há assentos disponíveis.\n");
 		return;
+	}
+	
+	carregarIngressosDoArquivo();
+	
+	for (int i = 0; i < total_ingressos; i++) {
+    if (ingressos[i].id_sessao == sessoes[index_sessao].id) {
+        sessoes[index_sessao].assentos[ingressos[i].numero_assento - 1] = 1;
+    	}
 	}
 	
 	printf("\nMapa de assentos (0 = livre, 1 = ocupado):\n");
@@ -453,13 +521,29 @@ void venderIngresso() {
 	 sessoes[index_sessao].assentos_disponiveis--;
 	 total_ingressos++;
 	 
+	 FILE *arquivo = fopen("ingressos.txt", "a");
+		if (arquivo == NULL) {
+    		printf("Erro ao salvar o ingresso no arquivo.\n");
+    		return;
+		}
+	fprintf(arquivo, "%d,%d,%d,%d,%.2f,%s\n",
+        ingressos[total_ingressos - 1].id,         
+        ingressos[total_ingressos - 1].id_sessao,  
+        ingressos[total_ingressos - 1].id_filme,   
+        ingressos[total_ingressos - 1].numero_assento, 
+        ingressos[total_ingressos - 1].valor,      
+        ingressos[total_ingressos - 1].data_venda);
+        
+		fclose(arquivo);
+
+	 
 	 printf("\nIngresso vendido com sucesso!\n");
 	 printf("Sessão: %s | Horário: %s | Assento: %d | Valor: R$%.2f | Data: %s\n",
-	        sessoes[index_sessao].data,
-           sessoes[index_sessao].horario,
-           numero_assento,
-           sessoes[index_sessao].preco,
-           ingressos[total_ingressos - 1].data_venda);    
+	    	sessoes[index_sessao].data,
+        	sessoes[index_sessao].horario,
+        	numero_assento,
+        	sessoes[index_sessao].preco,
+        	ingressos[total_ingressos - 1].data_venda);    
 }
 
 //COMPLETA
@@ -542,6 +626,8 @@ void buscarFilmeGenero() {
 
 //COMPLETA
 void listarIngressosVendidos() {
+	carregarIngressosDoArquivo();
+	
     if (total_ingressos == 0) {
         printf("Nenhum ingresso vendido ainda.\n");
         return;
@@ -556,6 +642,8 @@ void listarIngressosVendidos() {
 
 //COMPLETA
 void relatorioVendas() {
+	carregarIngressosDoArquivo();
+	
     printf(YELLOW "\n===== RELATORIO DE VENDAS =====\n\n" RESET);
     float total = 0;
     for (int i = 0; i < total_ingressos; i++) {
@@ -568,8 +656,9 @@ void relatorioVendas() {
 //COMPLETA
 int main() {
     setlocale(LC_ALL, "Portuguese");
-    int opcao;
-    
+    	int opcao;
+	int id_sessao;
+	
     do {
         printf(YELLOW "\n|======== SISTEMA DE CINEMA ========|\n" RESET);
         printf(BLUE "|1. Listar todos os filmes          |\n" RESET);
@@ -593,7 +682,7 @@ int main() {
                 break;
             case 2:
                 cadastrarFilme();
-				break;
+		break;
             case 3:
                 cadastrarSessao();
                 break;
@@ -619,11 +708,10 @@ int main() {
                 listarIngressosVendidos();
                 break;
             case 11:
-            	int id_sessao;
-   				printf("Digite o ID da sessão para ver o mapa de assentos: ");
-    			scanf("%d", &id_sessao);
-    			exibirMapaAssentos(id_sessao);
-    			break;
+   		printf("Digite o ID da sessão para ver o mapa de assentos: ");
+    		scanf("%d", &id_sessao);
+    		exibirMapaAssentos(id_sessao);
+    		break;
             case 0:
                 printf("\nSaindo do sistema...\n");
                 break;
