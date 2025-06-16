@@ -1,0 +1,5 @@
+admin@gmail.com,123456,admin
+pejota@gmail.com,senha,cliente
+pejota@gmail.com,senha,cliente
+pejota@gmail.com,senha,cliente
+pejota@gmail.com,senha,cliente
