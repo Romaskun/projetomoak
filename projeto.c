@@ -2,495 +2,780 @@
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
+#include <ctype.h>
 
-// Definição de tamanhos máximos
-#define NOME 50
-#define FILMES 10
-#define SESSOES 20
-#define INGRESSOS 100
-#define ASSENTOS 30
+#define MAX_FILMES 50
+#define MAX_SESSOES 100
+#define MAX_USUARIOS 100
+#define LINHAS_ASSENTOS 7
+#define COLUNAS_ASSENTOS 12
 
-// Estrutura para armazenar informações de um filme
-typedef struct {
+struct Usuario {
+    char email[100];
+    char senha[100];
+    char tipo[20];
+};
+
+struct Filme {
     int id;
-    char titulo[NOME];
-    char genero[NOME];
+    char titulo[100];
+    char genero[50];
     int duracao;
-} Filme;
+};
 
-// Estrutura para armazenar informações de uma sessão
-typedef struct {
+struct Sessao {
     int id;
     int id_filme;
-    char data[11]; 
-    char horario[6]; 
-    char sala[10];
+    char data[20];
+    char horario[10];
     float preco;
+    int ingressos_vendidos;
     int assentos_totais;
     int assentos_disponiveis;
-    int assentos[ASSENTOS];
-} Sessao;
+    int assentos[LINHAS_ASSENTOS][COLUNAS_ASSENTOS];
+};
 
-// Estrutura para armazenar informações de um ingresso vendido
-typedef struct {
-    int id;
-    int id_sessao;
-    int id_filme;
-    int numero_assento;
-    float valor;
-    char data_venda[11];
-} Ingresso;
-
-// Variáveis globais para armazenar os dados
-Filme filmes[FILMES];
-Sessao sessoes[SESSOES];
-Ingresso ingressos[INGRESSOS];
+struct Usuario usuarios[MAX_USUARIOS];
+int total_usuarios = 0;
+struct Filme filmes[MAX_FILMES];
+struct Sessao sessoes[MAX_SESSOES];
 int total_filmes = 0;
 int total_sessoes = 0;
-int total_ingressos = 0;
+float faturamento_total = 0.0;
 
-// Função para listar todos os filmes (KAIO)
-void listarFilmes() {
-    // O que fazer: Implementar a listagem de todos os filmes cadastrados
-    if (total_filmes == 0) {
-        printf("Nenhum filme cadastrado.\n");
-    } else {
-       printf("\n===== LISTA DE FILMES =====\n\n");
-       for (int i = 0; i < total_filmes; i++) {
-        printf("%d. %s (%s, %d min)\n", filmes[i].id, filmes[i].titulo, filmes[i].genero, filmes[i].duracao);
-    }   
-         printf("\nTotal de filmes cadastrados: %d\n", total_filmes);
-    }
-}
-        
-// Função para cadastrar um novo filme (COUTINHO)
-void cadastrarFilme() {
-    if (total_filmes >= FILMES) {
-    	printf("Limite de Filmes Atingido");
-    	return;
-	}    
-	
-	filmes[total_filmes].id = total_filmes + 1;
-	
-    printf("\n===== CADASTRO DE FILME =====\n");
-    printf("ID: %d\n", filmes[total_filmes].id);
-    printf("Digite os dados do filme:\n");
+void carregar_usuarios_do_arquivo();
+void listar_filmes();
+void listar_filmes_sem_pausa();
+void listar_sessoes();
+void pausar();
+void mostrar_assentos(struct Sessao s);
 
-    printf("Titulo: ");
-    fflush(stdin);
-    scanf(" %[^\n]", filmes[total_filmes].titulo);
+int fazer_login(char tipo_usuario[20]) {
+    char email[100], senha[100];
 
-    printf("Genero: ");
-    fflush(stdin);
-    scanf(" %[^\n]", filmes[total_filmes].genero);
+    carregar_usuarios_do_arquivo();
 
-    printf("Duracao (minutos): ");
-    scanf("%d", &filmes[total_filmes].duracao);
-    total_filmes++;
+    while (1) {
+        printf("========== LOGIN ==========\n");
+        printf("Email: ");
+        fflush(stdin);
+        scanf(" %[^\n]", email);
+        printf("Senha: ");
+        fflush(stdin);
+        scanf(" %[^\n]", senha);
 
-    printf("\nFilme cadastrado com sucesso!\n");
-    
-    printf("\nDeseja cadastrar outro filme? (S/N): ");
-	char resposta;
-    fflush(stdin);
-    scanf("%c", &resposta);
-    if (resposta == 'S' || resposta == 's') {
-        cadastrarFilme();
+        for (int i = 0; i < total_usuarios; i++) {
+            if (strcmp(usuarios[i].email, email) == 0 &&
+                strcmp(usuarios[i].senha, senha) == 0) {
+                strcpy(tipo_usuario, usuarios[i].tipo);
+                printf("\nLogin realizado com sucesso como %s!\n", tipo_usuario);
+                return 1;
+            }
+        }
+        printf("\nEmail ou senha incorretos. Tente novamente.\n\n");
     }
 }
 
+void carregar_usuarios_do_arquivo() {
+    FILE *arquivo = fopen("usuarios.txt", "r");
 
-// Função para cadastrar uma nova sessão (PEJOTA)
-void cadastrarSessao() {
-    if(total_sessoes >= SESSOES) {
-    	printf("LIMITE DE SESSOES ATINGIDO!!");
-    	return;
-	}
-    printf("\n===== CADASTRO DE SESSAO =====\n");
-    
-    if(total_filmes == 0) {
-    	printf("Nenhum filme em Cartaz neste momento. Cadastre um filme para inicar uma sessão de cinema");
-    	return;
-	}
-	
-	printf("\n---------FILMES EM CARTAZ-----------\n");
-	for(int i = 0; i < total_filmes; i++) {
-		printf("ID: %d |\n TITULO: %s |\n",filmes[i].id, filmes[i].titulo);
-	}
-	
-	sessoes[total_sessoes].id = total_sessoes + 1;
-	printf("\nID SESSÃO: %d\n", sessoes[total_sessoes].id);
-	
-	printf("Informe o ID do filme para a sessão: ");
-	scanf("%d", &sessoes[total_sessoes].id_filme);
-	
-	printf("Data da sessão (DD/MM/AAAA): ");
-	scanf(" %10[^\n]", sessoes[total_sessoes].data);
-	
-	printf("Horário da sessão (HH:MM): ");
-	scanf(" %5[^\n]", sessoes[total_sessoes].horario);
-	
-	printf("Sala: ");
-	scanf(" %9[^\n]", sessoes[total_sessoes].sala);
-	
-	printf("Preço do ingresso: ");
-	scanf("%f", &sessoes[total_sessoes].preco);
-	
-	sessoes[total_sessoes].assentos_totais = ASSENTOS;
-	sessoes[total_sessoes].assentos_disponiveis = ASSENTOS;
-	
-	for (int i = 0; i < ASSENTOS; i++) {
-		sessoes[total_sessoes].assentos[i] = 0;
-	}
-	total_sessoes++;
-	printf("\nSessão cadastrada com sucesso!!\n");
+    if (arquivo == NULL) {
+        FILE *novo = fopen("usuarios.txt", "w");
+        fprintf(novo, "admin@gmail.com,123456,admin\n");
+        fclose(novo);
+        arquivo = fopen("usuarios.txt", "r");
+    }
+
+    total_usuarios = 0;
+    while (fscanf(arquivo, "%99[^,],%99[^,],%19[^\n]\n",
+                  usuarios[total_usuarios].email,
+                  usuarios[total_usuarios].senha,
+                  usuarios[total_usuarios].tipo) == 3) {
+        total_usuarios++;
+    }
+    fclose(arquivo);
 }
 
+void salvar_usuarios_no_arquivo(struct Usuario novo) {
+    FILE *arquivo = fopen("usuarios.txt", "a");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivos de usuários.\n");
+        return;
+    }
+    fprintf(arquivo, "%s,%s,%s\n", novo.email, novo.senha, novo.tipo);
+    fclose(arquivo);
+}
 
-    // Função para buscar sessões de um filme (RAFAEL)
-void buscarSessoesFilme() {
-   
-    printf("\n===== BUSCAR SESSOES DE UM FILME =====\n");
-    
-       if (total_filmes == 0) {
-        printf("Nenhum filme cadastrado.\n");
+void cadastrar_usuario() {
+    struct Usuario novo;
+
+    carregar_usuarios_do_arquivo();
+
+    printf("\n=== Cadastro de Novo Cliente ===\n");
+    printf("Email: ");
+    fflush(stdin);
+    scanf(" %[^\n]", novo.email);
+
+    for (int i = 0; i < total_usuarios; i++) {
+        if (strcmp(usuarios[i].email, novo.email) == 0) {
+            printf("ERRO: JÁ EXISTE UM USUÁRIO COM ESTE EMAIL.\n");
+            pausar();
+            return;
+        }
+    }
+
+    printf("Senha: ");
+    fflush(stdin);
+    scanf(" %[^\n]", novo.senha);
+
+    strcpy(novo.tipo, "cliente");
+
+    salvar_usuarios_no_arquivo(novo);
+    printf("Cadastro realizado com sucesso!\n");
+    pausar();
+}
+
+void limpar_tela() {
+    system("cls");
+}
+
+void pausar() {
+    printf("\nPressione Enter para continuar...");
+    fflush(stdin);
+    getchar();
+}
+
+void carregarFilmesDoArquivo() {
+    FILE *arquivo = fopen("filmes.txt", "r");
+    if (arquivo == NULL) {
         return;
     }
 
-    char titulo_busca[NOME];
-    int encontrado = 0;
+    total_filmes = 0;
+    while (fscanf(arquivo, "%d,%99[^,],%49[^,],%d\n",
+                  &filmes[total_filmes].id,
+                  filmes[total_filmes].titulo,
+                  filmes[total_filmes].genero,
+                  &filmes[total_filmes].duracao) == 4) {
+        total_filmes++;
+    }
+    fclose(arquivo);
+}
 
-    printf("Digite o título do filme: ");
+void carregarSessoesDoArquivo() {
+    FILE *arquivo = fopen("sessoes.txt", "r");
+    if (arquivo == NULL) {
+        return;
+    }
+
+    total_sessoes = 0;
+    while (fscanf(arquivo, "%d %d %s %s %f %d %d %d",
+                  &sessoes[total_sessoes].id,
+                  &sessoes[total_sessoes].id_filme,
+                  sessoes[total_sessoes].data,
+                  sessoes[total_sessoes].horario,
+                  &sessoes[total_sessoes].preco,
+                  &sessoes[total_sessoes].ingressos_vendidos,
+                  &sessoes[total_sessoes].assentos_totais,
+                  &sessoes[total_sessoes].assentos_disponiveis) == 8) {
+
+        for (int i = 0; i < LINHAS_ASSENTOS; i++) {
+            for (int j = 0; j < COLUNAS_ASSENTOS; j++) {
+                fscanf(arquivo, "%d", &sessoes[total_sessoes].assentos[i][j]);
+            }
+        }
+        total_sessoes++;
+    }
+
+    fclose(arquivo);
+
+    faturamento_total = 0.0;
+    for (int i = 0; i < total_sessoes; i++) {
+        faturamento_total += sessoes[i].ingressos_vendidos * sessoes[i].preco;
+    }
+}
+
+void salvarSessoesNoArquivo() {
+    FILE *arquivo = fopen("sessoes.txt", "w");
+    if (arquivo == NULL) {
+        printf("Erro ao salvar sessões.\n");
+        return;
+    }
+
+    for (int i = 0; i < total_sessoes; i++) {
+        fprintf(arquivo, "%d %d %s %s %.2f %d %d %d",
+                sessoes[i].id, sessoes[i].id_filme, sessoes[i].data,
+                sessoes[i].horario, sessoes[i].preco, sessoes[i].ingressos_vendidos,
+                sessoes[i].assentos_totais, sessoes[i].assentos_disponiveis);
+
+        for (int l = 0; l < LINHAS_ASSENTOS; l++) {
+            for (int c = 0; c < COLUNAS_ASSENTOS; c++) {
+                fprintf(arquivo, " %d", sessoes[i].assentos[l][c]);
+            }
+        }
+        fprintf(arquivo, "\n");
+    }
+    fclose(arquivo);
+}
+
+void mostrar_menu() {
+    printf("\n========================================\n");
+    printf("\tCINE SENIVIS (ADMIN)\n");
+    printf("========================================\n");
+    printf("1. Cadastrar Filme\n");
+    printf("2. Listar Filmes\n");
+    printf("3. Cadastrar Sessao\n");
+    printf("4. Consultar Sessoes de um Filme\n");
+    printf("5. Vender Ingresso\n");
+    printf("6. Relatorio de Vendas\n");
+    printf("7. Apagar Filme\n");
+    printf("8. Apagar Sessão\n");
+    printf("0. Sair\n");
+    printf("========================================\n");
+    printf("Escolha uma opcao: ");
+}
+
+void cadastrar_filme() {
+    limpar_tela();
+    carregarFilmesDoArquivo();
+    printf("\n=== CADASTRAR FILME ===\n");
+
+    if (total_filmes >= MAX_FILMES) {
+        printf("Limite de filmes atingido!\n");
+        pausar();
+        return;
+    }
+
+    struct Filme novo_filme;
+    novo_filme.id = (total_filmes == 0) ? 1 : filmes[total_filmes - 1].id + 1;
+
+    printf("Digite o titulo do filme: ");
     fflush(stdin);
-    scanf(" %[^\n]", titulo_busca);
+    scanf(" %[^\n]", novo_filme.titulo);
 
-    // Procurar filme pelo título
+    printf("Digite o genero: ");
+    fflush(stdin);
+    scanf(" %[^\n]", novo_filme.genero);
+
+    printf("Digite a duracao (em minutos): ");
+    scanf("%d", &novo_filme.duracao);
+
+    filmes[total_filmes] = novo_filme;
+
+    FILE *arquivo = fopen("filmes.txt", "a");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!");
+        return;
+    }
+
+    fprintf(arquivo, "%d,%s,%s,%d\n",
+            novo_filme.id, novo_filme.titulo,
+            novo_filme.genero, novo_filme.duracao);
+
+    fclose(arquivo);
+    total_filmes++;
+    printf("\nFilme cadastrado com sucesso!\n");
+    pausar();
+}
+
+void listar_filmes() {
+    limpar_tela();
+    carregarFilmesDoArquivo();
+    printf("\n=== LISTA DE FILMES ===\n");
+
+    if (total_filmes == 0) {
+        printf("Nenhum filme cadastrado.\n");
+        pausar();
+        return;
+    }
+
+    printf("ID | Titulo                      | Genero        | Duracao\n");
+    printf("---|-----------------------------|---------------|--------\n");
+
     for (int i = 0; i < total_filmes; i++) {
-        if (strcmp(filmes[i].titulo, titulo_busca) == 0) {
-            int id_filme = filmes[i].id;
-            encontrado = 1;
-            printf("\nSessões do filme \"%s\":\n", filmes[i].titulo);
+        printf("%-2d | %-27s | %-13s | %d min\n",
+               filmes[i].id, filmes[i].titulo,
+               filmes[i].genero, filmes[i].duracao);
+    }
+    pausar();
+}
 
-            int encontrou_sessao = 0;
-            for (int j = 0; j < total_sessoes; j++) {
-                if (sessoes[j].id_filme == id_filme) {
-                    printf("ID Sessão: %d\n", sessoes[j].id);
-                    printf("Data: %s\n", sessoes[j].data);
-                    printf("Horário: %s\n", sessoes[j].horario);
-                    printf("Sala: %s\n", sessoes[j].sala);
-                    printf("Preço: R$ %.2f\n", sessoes[j].preco);
-                    printf("Assentos Disponíveis: %d\n", sessoes[j].assentos_disponiveis);
-                    printf("--------------------------\n");
-                    encontrou_sessao = 1;
-                }
-            }
+void cadastrar_sessao() {
+    limpar_tela();
+    carregarFilmesDoArquivo();
+    carregarSessoesDoArquivo();
+    printf("\n=== CADASTRAR SESSAO ===\n");
 
-            if (!encontrou_sessao) {
-                printf("Nenhuma sessão encontrada para este filme.\n");
-            }
+    if (total_filmes == 0) {
+        printf("Nenhum filme cadastrado! Cadastre um filme primeiro.\n");
+        pausar();
+        return;
+    }
+    if (total_sessoes >= MAX_SESSOES) {
+        printf("Limite de sessoes atingido!\n");
+        pausar();
+        return;
+    }
 
+    listar_filmes_sem_pausa();
+
+    struct Sessao nova_sessao;
+    nova_sessao.id = (total_sessoes == 0) ? 1 : sessoes[total_sessoes - 1].id + 1;
+
+    printf("\nDigite o ID do filme: ");
+    scanf("%d", &nova_sessao.id_filme);
+
+    printf("Digite a data (ex: 15/12/2024): ");
+    scanf("%s", nova_sessao.data);
+
+    printf("Digite o horario (ex: 19:30): ");
+    scanf("%s", nova_sessao.horario);
+
+    printf("Digite o preco do ingresso: R$ ");
+    scanf("%f", &nova_sessao.preco);
+
+    nova_sessao.ingressos_vendidos = 0;
+    nova_sessao.assentos_totais = LINHAS_ASSENTOS * COLUNAS_ASSENTOS;
+    nova_sessao.assentos_disponiveis = LINHAS_ASSENTOS * COLUNAS_ASSENTOS;
+    for (int i = 0; i < LINHAS_ASSENTOS; i++) {
+        for (int j = 0; j < COLUNAS_ASSENTOS; j++) {
+            nova_sessao.assentos[i][j] = 0;
+        }
+    }
+
+    sessoes[total_sessoes] = nova_sessao;
+    total_sessoes++;
+
+    salvarSessoesNoArquivo();
+
+    printf("\nSessao cadastrada com sucesso!\n");
+    pausar();
+}
+
+void listar_sessoes() {
+    limpar_tela();
+    carregarFilmesDoArquivo();
+    carregarSessoesDoArquivo();
+    printf("\n=== CONSULTAR SESSOES POR FILME ===\n");
+
+    if (total_filmes == 0) {
+        printf("Nenhum filme cadastrado.\n");
+        pausar();
+        return;
+    }
+
+    listar_filmes_sem_pausa();
+
+    int id_filme_escolhido;
+    printf("\nDigite o ID do filme para ver suas sessoes: ");
+    scanf("%d", &id_filme_escolhido);
+
+    limpar_tela();
+
+    char nome_filme_escolhido[100] = "";
+    int encontrou_filme = 0;
+    for (int i = 0; i < total_filmes; i++) {
+        if (filmes[i].id == id_filme_escolhido) {
+            strcpy(nome_filme_escolhido, filmes[i].titulo);
+            encontrou_filme = 1;
             break;
         }
     }
 
-    if (!encontrado) {
-        printf("Filme não encontrado.\n");
+    if (!encontrou_filme) {
+        printf("Filme com ID %d nao encontrado.\n", id_filme_escolhido);
+        pausar();
+        return;
     }
+
+    printf("Mostrando sessoes para o filme: %s\n", nome_filme_escolhido);
+    printf("==================================================\n");
+
+    int encontrou_sessao = 0;
+    for (int i = 0; i < total_sessoes; i++) {
+        if (sessoes[i].id_filme == id_filme_escolhido) {
+            encontrou_sessao = 1;
+            printf("\n>> Sessao ID: %d | Data: %s | Horario: %s | Preco: R$%.2f\n",
+                   sessoes[i].id, sessoes[i].data, sessoes[i].horario, sessoes[i].preco);
+
+            mostrar_assentos(sessoes[i]);
+            printf("--------------------------------------------------\n");
+        }
+    }
+
+    if (!encontrou_sessao) {
+        printf("\nNenhuma sessao encontrada para este filme.\n");
+    }
+
+    pausar();
 }
 
-// Função para exibir o mapa de assentos de uma sessão
-void exibirMapaAssentos(int id_sessao) {
-    // TODO: Implementar a exibição do mapa de assentos de uma sessão
-    printf("\n===== MAPA DE ASSENTOS =====\n\n");
-    
-     // Verifica se a sessão existe
-    int encontrada = 0;
+void mostrar_assentos(struct Sessao s) {
+    printf("\n=============== T E L A ===============\n");
+    printf("    ");
+    for (int j = 1; j <= COLUNAS_ASSENTOS; j++) {
+        printf("%-3d", j);
+    }
+    printf("\n");
+
+    for (int i = 0; i < LINHAS_ASSENTOS; i++) {
+        printf(" %c |", 'A' + i);
+        for (int j = 0; j < COLUNAS_ASSENTOS; j++) {
+            if (s.assentos[i][j] == 0) {
+                printf("[ ]");
+            } else {
+                printf("[X]");
+            }
+        }
+        printf("\n");
+    }
+    printf("=======================================\n");
+    printf("[X] = Ocupado | [ ] = Livre\n");
+}
+
+void vender_ingresso() {
+    limpar_tela();
+    carregarFilmesDoArquivo();
+    carregarSessoesDoArquivo();
+
+    if (total_sessoes == 0) {
+        printf("Nenhuma sessao cadastrada.\n");
+        pausar();
+        return;
+    }
+
+    printf("--- Sessoes Disponiveis ---\n");
+    for (int i = 0; i < total_sessoes; i++) {
+        char nome_filme[100] = "N/A";
+        for (int j = 0; j < total_filmes; j++) {
+            if (filmes[j].id == sessoes[i].id_filme) {
+                strcpy(nome_filme, filmes[j].titulo);
+                break;
+            }
+        }
+        printf("ID: %d | Filme: %s | Data: %s | Horario: %s | Assentos: %d\n",
+               sessoes[i].id, nome_filme, sessoes[i].data, sessoes[i].horario, sessoes[i].assentos_disponiveis);
+    }
+    printf("---------------------------\n");
+
+    int id_sessao;
+    printf("\nDigite o ID da sessao para comprar ingressos: ");
+    scanf("%d", &id_sessao);
+
+    int indice_sessao = -1;
     for (int i = 0; i < total_sessoes; i++) {
         if (sessoes[i].id == id_sessao) {
-            encontrada = 1;
-            printf("Sessão ID: %d | Sala: %s | Horário: %s | Data: %s\n", 
-                    sessoes[i].id, sessoes[i].sala, sessoes[i].horario, sessoes[i].data);
-            printf("Assentos (0 = Livre | 1 = Ocupado):\n\n");
+            indice_sessao = i;
+            break;
+        }
+    }
 
-            // Exibe os assentos como uma lista numerada
-            for (int j = 0; j < sessoes[i].assentos_totais; j++) {
-                printf("%02d[%d]  ", j + 1, sessoes[i].assentos[j]);
+    if (indice_sessao == -1) {
+        printf("Sessao nao encontrada!\n");
+        pausar();
+        return;
+    }
 
-                // Quebra de linha a cada 10 assentos para melhor visualização
-                if ((j + 1) % 10 == 0) {
-                    printf("\n");
+    int quantidade;
+    printf("Digite a quantidade de ingressos: ");
+    scanf("%d", &quantidade);
+
+    if (quantidade <= 0 || quantidade > sessoes[indice_sessao].assentos_disponiveis) {
+        printf("Quantidade invalida ou nao ha assentos suficientes (%d disponiveis).\n", sessoes[indice_sessao].assentos_disponiveis);
+        pausar();
+        return;
+    }
+
+    for (int i = 0; i < quantidade; i++) {
+        mostrar_assentos(sessoes[indice_sessao]);
+
+        char assento_str[4];
+        int linha, coluna;
+        int valido = 0;
+
+        while (!valido) {
+            printf("\nEscolha o assento para o ingresso %d de %d (ex: A5, C12): ", i + 1, quantidade);
+            fflush(stdin);
+            scanf("%s", assento_str);
+
+            linha = toupper(assento_str[0]) - 'A';
+            coluna = atoi(&assento_str[1]) - 1;
+
+            if (linha < 0 || linha >= LINHAS_ASSENTOS || coluna < 0 || coluna >= COLUNAS_ASSENTOS) {
+                printf("Assento invalido. Por favor, tente novamente.\n");
+            } else if (sessoes[indice_sessao].assentos[linha][coluna] == 1) {
+                printf("Este assento ja esta ocupado. Escolha outro.\n");
+            } else {
+                sessoes[indice_sessao].assentos[linha][coluna] = 1;
+                sessoes[indice_sessao].assentos_disponiveis--;
+                sessoes[indice_sessao].ingressos_vendidos++;
+                valido = 1;
+            }
+        }
+    }
+
+    float valor_total = quantidade * sessoes[indice_sessao].preco;
+    faturamento_total += valor_total;
+
+    salvarSessoesNoArquivo();
+    printf("\nCompra de %d ingresso(s) realizada com sucesso! Valor total: R$ %.2f\n", quantidade, valor_total);
+    pausar();
+}
+
+void relatorio_vendas() {
+    limpar_tela();
+    carregarFilmesDoArquivo();
+    carregarSessoesDoArquivo();
+    printf("\n=== RELATORIO DE VENDAS ===\n");
+
+    if (total_sessoes == 0) {
+        printf("Nenhuma sessao cadastrada.\n");
+        pausar();
+        return;
+    }
+
+    printf("Filme                         | Data       | Horario | Vendidos | Arrecadacao\n");
+    printf("------------------------------|------------|---------|----------|------------\n");
+
+    int total_ingressos_geral = 0;
+
+    for (int i = 0; i < total_sessoes; i++) {
+        if (sessoes[i].ingressos_vendidos > 0) {
+            char nome_filme[100] = "N/A";
+            for (int j = 0; j < total_filmes; j++) {
+                if (filmes[j].id == sessoes[i].id_filme) {
+                    strcpy(nome_filme, filmes[j].titulo);
+                    break;
                 }
             }
-
-            printf("\n\nLegenda: [0] Livre  [1] Ocupado\n");
-            break;
+            float arrecadacao = sessoes[i].ingressos_vendidos * sessoes[i].preco;
+            printf("%-29s | %-10s | %-7s | %-8d | R$ %.2f\n",
+                   nome_filme, sessoes[i].data, sessoes[i].horario,
+                   sessoes[i].ingressos_vendidos, arrecadacao);
+            total_ingressos_geral += sessoes[i].ingressos_vendidos;
         }
     }
 
-    if (!encontrada) {
-        printf("Sessão com ID %d não encontrada.\n", id_sessao);
-    }
-}
- 
-
-// Função para vender ingressos (DIEGO)
-void venderIngresso() {
-	if (total_sessoes == 0) {
-		printf("\nSem sessões cadastradas...\n");
-		return;
-	}
-	
-	if (total_ingressos >= INGRESSOS) {
-		printf("\nLimite máximo de inregssos atingido.\n");
-		return;
-	}
-	
-	int id_sessao, numero_assento;
-	printf("\n===== VENDA DE INGRESSOS =====\n");
-
-    printf("\nSessões Disponíveis:\n");
-    for (int i = 0; i < total_sessoes; i++) {
-        printf("ID: %d | Filme ID: %d | Data: %s | Horário: %s | Sala: %s | Preço: R$%.2f | Assentos Disponíveis: %d\n",
-               sessoes[i].id, sessoes[i].id_filme, sessoes[i].data, sessoes[i].horario,
-               sessoes[i].sala, sessoes[i].preco, sessoes[i].assentos_disponiveis);
-   }
-   
-   printf("\nDigite o ID da sessão desejada: ");
-   scanf("%d", &id_sessao);
-   
-   int index_sessao = -1;
-   for (int i = 0; i < total_sessoes; i++) {
-   	if (sessoes[i].id == id_sessao) {
-   		index_sessao = i;
-   		break;
-		}
-	}
-	
-	if (index_sessao == -1) {
-		printf("\nSessão não encontrada.\n");
-		return;
-	}
-	
-	if (sessoes[index_sessao].assentos_disponiveis == 0) {
-		printf("\nSessão lotada! Não há assentos disponíveis.\n");
-		return;
-	}
-	
-	printf("\nMapa de assentos (0 = livre, 1 = ocupado):\n");
-	for (int i = 0; i < sessoes[index_sessao].assentos_totais; i++) {
-		printf("[%02d:%d] ", i + 1, sessoes[index_sessao].assentos[i]);
-		if ((i + 1) % 5 == 0) 
-		printf("\n");
-	}
-	
-	printf("\n\nInforme o número do assento (1-%d): ", sessoes[index_sessao].assentos_totais);
-	scanf("%d", &numero_assento);
-	
-	if (numero_assento < 1 || numero_assento > sessoes[index_sessao].assentos_totais ||
-	    sessoes[index_sessao].assentos[numero_assento - 1] == 1) {
-	    printf("\nAssento inválido ou ocupado.\n");
-		 return;	
-		 } 
-		 
-	char confirmacao;
-	printf("\nConfirmar compra do assento %d por R$%2.f? (S/N): ",numero_assento, sessoes[index_sessao].preco);
-	scanf(" %c", &confirmacao);
-	
-	if (confirmacao != 'S' && confirmacao != 's') {
-		printf("\nCompra cancelada.\n");
-		return;
-	}
-	
-	 ingressos[total_ingressos].id = total_ingressos + 1;
-	 ingressos[total_ingressos].id_sessao = id_sessao;
-	 ingressos[total_ingressos].id_filme = sessoes[index_sessao].id_filme;
-	 ingressos[total_ingressos].numero_assento = numero_assento;
-	 ingressos[total_ingressos].valor = sessoes[index_sessao].preco;
-	 strcpy(ingressos[total_ingressos].data_venda, "20/05/2025");
-	 
-	 sessoes[index_sessao].assentos[numero_assento - 1] = 1;
-	 sessoes[index_sessao].assentos_disponiveis--;
-	 total_ingressos++;
-	 
-	 printf("\nIngresso vendido com sucesso!\n");
-	 printf("Sessão: %s | Horário: %s | Assento: %d | Valor: R$%.2f | Data: %s\n",
-	        sessoes[index_sessao].data,
-           sessoes[index_sessao].horario,
-           numero_assento,
-           sessoes[index_sessao].preco,
-           ingressos[total_ingressos - 1].data_venda);    
+    printf("\n");
+    printf("Total de ingressos vendidos: %d\n", total_ingressos_geral);
+    printf("Faturamento total geral: R$ %.2f\n", faturamento_total);
+    pausar();
 }
 
-
-// Função para remover um filme pelo ID
-void removerFilme() {
+void apagar_filme() {
+    limpar_tela();
+    carregarFilmesDoArquivo();
     if (total_filmes == 0) {
-        printf("Nenhum filme cadastrado.\n");
+        printf("Nenhum filme cadastrado para apagar.\n");
+        pausar();
         return;
     }
-    int id;
-    printf("\n===== REMOVER FILME =====\n");
-    printf("Digite o ID do filme a remover: ");
-    scanf("%d", &id);
-    int encontrado = 0;
+
+    listar_filmes_sem_pausa();
+
+    int id_apagar;
+    printf("\nDigite o ID do filme que deseja apagar: ");
+    scanf("%d", &id_apagar);
+    int indice = -1;
     for (int i = 0; i < total_filmes; i++) {
-        if (filmes[i].id == id) {
-            encontrado = 1;
-            // Remove o filme deslocando os próximos
-            for (int j = i; j < total_filmes - 1; j++) {
-                filmes[j] = filmes[j + 1];
-            }
-            total_filmes--;
-            printf("Filme removido com sucesso!\n");
+        if (filmes[i].id == id_apagar) {
+            indice = i;
             break;
         }
     }
-    if (!encontrado) {
-        printf("Filme não encontrado.\n");
+    if (indice == -1) {
+        printf("Filme com ID %d nao encontrado.\n", id_apagar);
+        pausar();
+        return;
     }
+    for (int i = indice; i < total_filmes - 1; i++) {
+        filmes[i] = filmes[i + 1];
+    }
+    total_filmes--;
+    FILE *arquivo = fopen("filmes.txt", "w");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir arquivo para salvar.\n");
+        pausar();
+        return;
+    }
+    for (int i = 0; i < total_filmes; i++) {
+        fprintf(arquivo, "%d,%s,%s,%d\n", filmes[i].id, filmes[i].titulo, filmes[i].genero, filmes[i].duracao);
+    }
+    fclose(arquivo);
+    printf("Filme apagado com sucesso!\n");
+    pausar();
 }
 
-// Função para remover uma sessão pelo ID
-void removerSessao() {
+void apagar_sessao() {
+    limpar_tela();
+    carregarSessoesDoArquivo();
+    carregarFilmesDoArquivo();
     if (total_sessoes == 0) {
-        printf("Nenhuma sessão cadastrada.\n");
+        printf("Nenhuma sessão cadastrada para apagar.\n");
+        pausar();
         return;
     }
-    int id;
-    printf("\n===== REMOVER SESSAO =====\n");
-    printf("Digite o ID da sessão a remover: ");
-    scanf("%d", &id);
-    int encontrado = 0;
+    printf("=== Apagar Sessao ===\n");
+
     for (int i = 0; i < total_sessoes; i++) {
-        if (sessoes[i].id == id) {
-            encontrado = 1;
-            for (int j = i; j < total_sessoes - 1; j++) {
-                sessoes[j] = sessoes[j + 1];
+        char nome_filme[100] = "N/A";
+        for (int j = 0; j < total_filmes; j++) {
+            if (filmes[j].id == sessoes[i].id_filme) {
+                strcpy(nome_filme, filmes[j].titulo);
             }
-            total_sessoes--;
-            printf("Sessão removida com sucesso!\n");
+        }
+        printf("ID %d: %s (%s %s)\n", sessoes[i].id, nome_filme, sessoes[i].data, sessoes[i].horario);
+    }
+
+    int id_apagar;
+    printf("\nDigite o ID da sessão que deseja apagar: ");
+    scanf("%d", &id_apagar);
+    int indice = -1;
+    for (int i = 0; i < total_sessoes; i++) {
+        if (sessoes[i].id == id_apagar) {
+            indice = i;
             break;
         }
     }
-    if (!encontrado) {
-        printf("Sessão não encontrada.\n");
+    if (indice == -1) {
+        printf("Sessao com ID %d nao encontrada.\n", id_apagar);
+        pausar();
+        return;
     }
+    for (int i = indice; i < total_sessoes - 1; i++) {
+        sessoes[i] = sessoes[i + 1];
+    }
+    total_sessoes--;
+    salvarSessoesNoArquivo();
+    printf("Sessao apagada com sucesso!\n");
+    pausar();
 }
 
-// Função para buscar filmes por gênero
-void buscarFilmeGenero() {
+void listar_filmes_sem_pausa() {
+    printf("\n--- Filmes em Cartaz ---\n");
     if (total_filmes == 0) {
         printf("Nenhum filme cadastrado.\n");
         return;
     }
-    char genero[NOME];
-    printf("\n===== BUSCAR FILMES POR GENERO =====\n");
-    printf("Digite o gênero: ");
-    fflush(stdin);
-    scanf(" %[^\n]", genero);
-    int encontrou = 0;
+
+    printf("ID | Titulo                      \n");
+    printf("---|-----------------------------\n");
+
     for (int i = 0; i < total_filmes; i++) {
-        if (strcmp(filmes[i].genero, genero) == 0) {
-            printf("%d. %s (%d min)\n", filmes[i].id, filmes[i].titulo, filmes[i].duracao);
-            encontrou = 1;
-        }
+        printf("%-2d | %-27s\n",
+               filmes[i].id, filmes[i].titulo);
     }
-    if (!encontrou) {
-        printf("Nenhum filme encontrado para o gênero informado.\n");
-    }
+    printf("---------------------------\n");
 }
 
-// Função para exibir todos os ingressos vendidos
-void listarIngressosVendidos() {
-    if (total_ingressos == 0) {
-        printf("Nenhum ingresso vendido ainda.\n");
-        return;
-    }
-    printf("\n===== INGRESSOS VENDIDOS =====\n");
-    for (int i = 0; i < total_ingressos; i++) {
-        printf("ID: %d | Sessão: %d | Filme: %d | Assento: %d | Valor: R$%.2f | Data: %s\n",
-            ingressos[i].id, ingressos[i].id_sessao, ingressos[i].id_filme,
-            ingressos[i].numero_assento, ingressos[i].valor, ingressos[i].data_venda);
-    }
-}
-
-// Função para relatório de vendas (completo)
-void relatorioVendas() {
-    printf("\n===== RELATORIO DE VENDAS =====\n\n");
-    float total = 0;
-    for (int i = 0; i < total_ingressos; i++) {
-        total += ingressos[i].valor;
-    }
-    printf("Total de ingressos vendidos: %d\n", total_ingressos);
-    printf("Total arrecadado: R$%.2f\n", total);
-}
-
-// Função principal
 int main() {
-    setlocale(LC_ALL, "Portuguese");
-    int opcao;
-    
+    setlocale(LC_ALL, "portuguese");
+    char tipo_usuario[20];
+    int escolha_login;
+
     do {
-        printf("\n===== SISTEMA DE CINEMA =====\n");
-        printf("1. Listar todos os filmes \n");
-        printf("2. Cadastrar filme \n");
-        printf("3. Cadastrar sessao \n");
-        printf("4. Buscar sessoes de um filme \n");
-        printf("5. Vender ingressos )\n");
-        printf("6. Relatorio de vendas\n");
-        printf("7. Remover filme\n");
-        printf("8. Remover sessão\n");
-        printf("9. Buscar filme por gênero\n");
-        printf("10. Listar ingressos vendidos\n");
+        limpar_tela();
+        printf("=== CINE SENIVIS ===\n");
+        printf("1. Fazer Login\n");
+        printf("2. Cadastrar-se (cliente)\n");
         printf("0. Sair\n");
-        printf("Escolha uma opcao: ");
-        scanf("%d", &opcao);
-        
-        switch (opcao) {
-            case 1:
-                listarFilmes();
-                break;
-            case 2:
-                cadastrarFilme();
-                break;
-            case 3:
-                cadastrarSessao();
-                break;
-            case 4:
-                buscarSessoesFilme();
-                break;
-            case 5:
-                venderIngresso();
-                break;
-            case 6:
-                relatorioVendas();
-                break;
-            case 7:
-                removerFilme();
-                break;
-            case 8:
-                removerSessao();
-                break;
-            case 9:
-                buscarFilmeGenero();
-                break;
-            case 10:
-                listarIngressosVendidos();
-                break;
-            case 0:
-                printf("\nSaindo do sistema...\n");
-                break;
-            default:
-                printf("\nOpcao invalida!\n");
+        printf("Escolha: ");
+        scanf("%d", &escolha_login);
+
+        if (escolha_login == 1) {
+            if (fazer_login(tipo_usuario)) break;
+        } else if (escolha_login == 2) {
+            cadastrar_usuario();
+        } else if (escolha_login != 0) {
+            printf("Opção inválida!\n");
+            pausar();
         }
-        
-        if (opcao != 0) {
-            printf("\nPressione Enter para continuar...");
-            fflush(stdin);
-            getchar();
+    } while (escolha_login != 0);
+
+    if (escolha_login == 0) {
+        printf("Saindo do sistema...\n");
+        return 0;
+    }
+
+    int opcao;
+    do {
+        limpar_tela();
+        if (strcmp(tipo_usuario, "admin") == 0) {
+            mostrar_menu();
+            scanf("%d", &opcao);
+            
+            switch (opcao) {
+                case 1: 
+                cadastrar_filme(); 
+                break;
+
+                case 2: 
+                listar_filmes(); 
+                break;
+
+                case 3: 
+                cadastrar_sessao(); 
+                break;
+
+                case 4: 
+                listar_sessoes(); 
+                break;
+
+                case 5: 
+                vender_ingresso(); 
+                break;
+
+                case 6: 
+                relatorio_vendas(); 
+                break;
+
+                case 7: 
+                apagar_filme(); 
+                break;
+
+                case 8: 
+                apagar_sessao(); 
+                break;
+
+                case 0: 
+                printf("\nSaindo do sistema...\n"); 
+                break;
+
+                default: 
+                printf("\nOpção inválida!\n"); 
+                pausar();
+            }
+        } else if (strcmp(tipo_usuario, "cliente") == 0) {
+            printf("\n===== MENU CLIENTE =====\n");
+            printf("1. Listar Filmes\n");
+            printf("2. Consultar Sessoes de um Filme\n");
+            printf("3. Comprar Ingresso\n");
+            printf("0. Sair\n");
+            printf("Escolha: ");
+            scanf("%d", &opcao);
+            
+            switch (opcao) {
+                case 1: 
+                listar_filmes(); 
+                break;
+
+                case 2: 
+                listar_sessoes(); 
+                break;
+
+                case 3: 
+                vender_ingresso(); 
+                break;
+
+                case 0: 
+                printf("Saindo...\n"); 
+                break;
+
+                default: 
+                printf("Opção inválida.\n"); 
+                pausar();
+            }
         }
-        
     } while (opcao != 0);
-    
     return 0;
 }
